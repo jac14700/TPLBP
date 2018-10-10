@@ -19,12 +19,12 @@ int main()
         waitKey(10);
     }
 
-//	FILE *image = fopen("Lena_gray_24.bmp","rb");
+//	  FILE *image = fopen("Lena_gray_24.bmp","rb");
 //    fseek(image,0,SEEK_END);
 //    long filesize = ftell(image);
 //    rewind(image);
 //    unsigned char *buffer = (unsigned char*)malloc(filesize * sizeof(unsigned char));
-//	fread(buffer, filesize, 1, image);
+//	  fread(buffer, filesize, 1, image);
 //    fclose(image);
 //    //*******************************************************************************Get image width and height
 //    int width = image_width(buffer);
