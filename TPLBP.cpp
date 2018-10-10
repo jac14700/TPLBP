@@ -1,9 +1,70 @@
 #include"TPLBP.h"
+Mat TPLBP(Mat scr)
+{
+    int x,y,x1,y1,z,h,a =2, first =0, second =-1, third =0, add =0, height =scr.size().height, width =scr.size().width;
+    Mat temp,result;
+    result.create( height,width,CV_8U);
+	temp.create(height+8,width+8,CV_8U);
+	scr.copyTo(temp(cv::Rect(3,3,scr.cols, scr.rows)));
+	for(x = 4; x < width+4; x++)
+	{
+		for(y = 4; y < height+4; y++)
+		{
+		    int sum=0;
+		    int x2=x-3,y2=y-3;
+		    int sum0,sum1,sum2;
+			mat_small_lbp(x,y,&sum0,temp);
+			for(int i=0;i<8;i++)
+            {
+                int x3=x2,y3=y2;
+                mat_small_lbp(x2,y2,&sum1,temp);
+                for(int j=0;j<a;j++)
+                {
+                  jump(&x3,&y3,x,y);
+                }
+                mat_small_lbp(x3,y3,&sum2,temp);
+                int a1=abs(sum1-sum0);
+                int a2=abs(sum2-sum0);
+                int a3;
+                if ((a1-a2)>t)
+                {
+                    a3=1;
+                }
+                else if ((a1-a2)<t)
+                {
+                    a3=0;
+                }
+                sum+=a3*pow(2,7-i);
+                jump(&x2,&y2,x,y);
+            }//end for
+            result.at<uchar>(y-4,x-4) =(uchar)sum;
+            sum=0;
+		}//end for
+	}//end for
+    return result;
+}
 
-
+Mat LBP(Mat scr)
+{
+    int x,y, height =scr.size().height, width =scr.size().width;
+    Mat temp,result;
+    result.create( height,width,CV_8U);
+	temp.create(height+2,width+2,CV_8U);
+	scr.copyTo(temp(cv::Rect(1,1,scr.cols, scr.rows)));
+	for(x = 1; x < width+1; x++)
+	{
+		for(y = 1; y < height+1; y++)
+		{
+		    int sum=0;
+		    mat_small_lbp(x,y,&sum,temp);
+			result.at<uchar>(y-1,x-1) =(uchar)sum;
+		}//end for
+	}//end for
+    return result;
+}
 void TPLBP(unsigned char *buffer, int width, int height)
 {
-    int a, x,y,x1,y1,z,h,first =0,second =-1,third =0,add =0;
+    int x,y,x1,y1,z,h,a =2, first =0, second =-1, third =0, add =0;
     Mat result;
 	unsigned char **pixel_2 ;
 	pixel_2 = (unsigned char**)malloc((height + 8) * sizeof(unsigned char*));
@@ -24,8 +85,6 @@ void TPLBP(unsigned char *buffer, int width, int height)
 			first += 1;
     		pixel_2[x][y] = buffer[54+(first-1)*3];
 		}
-
-    scanf("%d",&a);
 	for(x = 4; x < height+4; x++)
 	{
 		for(y = 4; y < width+4; y++)
@@ -185,6 +244,39 @@ int sma_LBP(int x,int y,int *s,unsigned char **p2)
         {
             int a1=p2[x1][y1];
             int b1=p2[x][y];
+            if (a1>=b1)
+            mask_33[num] = 1;
+            else if(a1 <b1)
+            mask_33[num] = 0;
+            num++;
+            if(num == 8)
+            {
+                *s=0;
+                *s += (mask_33[0] == 1) ? pow(2, 7):0;
+                *s += (mask_33[1] == 1) ? pow(2, 6):0;
+                *s += (mask_33[2] == 1) ? pow(2, 5):0;
+                *s += (mask_33[5] == 1) ? pow(2, 4):0;
+                *s += (mask_33[8] == 1) ? pow(2, 3):0;
+                *s += (mask_33[7] == 1) ? pow(2, 2):0;
+                *s += (mask_33[6] == 1) ? pow(2, 1):0;
+                *s += (mask_33[3] == 1) ? pow(2, 0):0;
+            }
+        }
+    }
+}
+
+int mat_small_lbp(int x,int y,int *s,Mat temp)
+{
+    int num=0;
+    int mask_33[9];
+    for(int x1 = x-1; x1 <= x+1; ++x1)
+    {
+        for(int y1 = y-1; y1 <= y+1; ++y1)
+        {
+            int a1=(int)temp.at<uchar>(y1,x1);
+            int b1=(int)temp.at<uchar>(y,x);
+            if(y==505)
+            cerr<<"a1:"<<a1<<"\tb1"<<b1<<"\n";
             if (a1>=b1)
             mask_33[num] = 1;
             else if(a1 <b1)

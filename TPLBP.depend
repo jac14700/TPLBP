@@ -1,6 +1,7 @@
 # depslib dependency file v1.0
-1539165054 source:e:\school stuffs\自傳履歷\github\tplbp\main.cpp
+1539183335 source:e:\school stuffs\自傳履歷\github\tplbp\main.cpp
 	"TPLBP.h"
+	"cam.h"
 
 1453612048 e:\cv2413_mingw_5.3.0_i686\include\opencv2\opencv.hpp
 	"opencv2/opencv_modules.hpp"
@@ -452,9 +453,18 @@
 	"opencv2/highgui/highgui_c.h"
 	"opencv2/highgui/highgui.hpp"
 
-1539165057 e:\school stuffs\自傳履歷\github\tplbp\tplbp.h
+1539183363 e:\school stuffs\自傳履歷\github\tplbp\tplbp.h
 	<opencv2/opencv.hpp>
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
+
+1539167987 source:e:\school stuffs\自傳履歷\github\tplbp\cam.cpp
+	<opencv2/opencv.hpp>
+
+1539168620 e:\school stuffs\自傳履歷\github\tplbp\cam.h
+	<opencv2/opencv.hpp>
+
+1539183408 source:e:\school stuffs\自傳履歷\github\tplbp\tplbp.cpp
+	"TPLBP.h"
 
