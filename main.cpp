@@ -1,11 +1,3 @@
-/*	Example for homework.
-	Input image standard : 24bits bmp image(gray level image).
-	Function Description:
-	1. image_width¡GGet bmp image width.
-	2. image_height : Get bmp image height.
-	3. LBP(Local Binary Pattern) : Computing image feature(texture).
-	4. Img2Csv : Image pixel record to csv file.
-*/
 #include<opencv2/opencv.hpp>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,12 +6,11 @@
 using namespace cv;
 int image_width(unsigned char *buffer);
 int image_height(unsigned char *buffer);
-void TPLBP(unsigned char *buffer, int width, int height);
-void Img2Csv(unsigned char *buffer, int filesize);
 int sma_LBP(int x,int y,int *s,unsigned char **p2);
 int jump(int *x,int *y,int corex,int corey);
-
-
+void TPLBP(unsigned char *buffer, int width, int height);
+void Img2Csv(unsigned char *buffer, int filesize);
+void TPLBP_show(Mat result);
 int main()
 {
 	FILE *image = fopen("Lena_gray_24.bmp","rb");
@@ -95,16 +86,16 @@ void TPLBP(unsigned char *buffer, int width, int height)
     		pixel_2[x][y] = 0;
 	}
 
-	for(x = 4; x < height; x++)
+	for(x = 4; x < height+4; x++)
 	{
-		for(y = 4; y < width; y++)
+		for(y = 4; y < width+4; y++)
 		{
 			first += 1;
     		pixel_2[x][y] = buffer[54+(first-1)*3];
 		}
 	}
 
-	for(x = 4; x <= height+4; x++)
+	for(x = 4; x < height+4; x++)
 	{
 		for(y = 4; y < width+4; y++)
 		{
@@ -118,49 +109,41 @@ void TPLBP(unsigned char *buffer, int width, int height)
                 sma_LBP(x2,y2,&sum1,pixel_2);
                 for(int j=0;j<a;j++)
                 {
-                    jump(&x3,&y3,x,y);
+                  jump(&x3,&y3,x,y);
                 }
-                    sma_LBP(x3,y3,&sum2,pixel_2);
-                    int a1=abs(sum1-sum0);
-                    int a2=abs(sum2-sum0);
-                    int a3;
-                    if ((a1-a2)>t)
-                    {
-                        a3=1;
-                    }
-                    else if ((a1-a2)<t)
-                    {
-                        a3=0;
-                    }
-                    sum+=a3*pow(2,7-i);
-                    jump(&x2,&y2,x,y);
-            }
-                pixel_lbp[x][y] =sum;
-                sum=0;
-					}
-				}
+                sma_LBP(x3,y3,&sum2,pixel_2);
+                int a1=abs(sum1-sum0);
+                int a2=abs(sum2-sum0);
+                int a3;
+                if ((a1-a2)>t)
+                {
+                    a3=1;
+                }
+                else if ((a1-a2)<t)
+                {
+                    a3=0;
+                }
+                sum+=a3*pow(2,7-i);
+                jump(&x2,&y2,x,y);
+            }//end for
+            pixel_lbp[x-4][y-4] =sum;
+            sum=0;
+		}//end for
+	}//end for
 system("pause");
 
 Mat result;
 result.create(height,width,CV_8UC3);
-
-  	/*After LBP calculate then write to original input data*/
-	for(x = 0; x < height; x++)
+for(x = width-1; x >= 0; x--)
+{
+    for(y = height-1; y >= 0 ; y--)
     {
-    	for(y = 0; y < width; y++)
-    	{
-    	    result.at<Vec3b>(y,x)[0]=pixel_lbp[x][y];
-            result.at<Vec3b>(y,x)[1]=pixel_lbp[x][y];
-            result.at<Vec3b>(y,x)[2]=pixel_lbp[x][y];
-            third += 1;
-            buffer[54+(third-1)*3] = pixel_lbp[x][y];
-    		buffer[55+(third-1)*3] = pixel_lbp[x][y];
-    		buffer[56+(third-1)*3] = pixel_lbp[x][y];
-		}
-	}
-
-imshow("result",result);
-waitKey(0);
+        result.at<Vec3b>(x,y)[0]=pixel_lbp[y][x];
+        result.at<Vec3b>(x,y)[1]=pixel_lbp[y][x];
+        result.at<Vec3b>(x,y)[2]=pixel_lbp[y][x];
+    }
+}
+    TPLBP_show(result);
 	for(x = 0; x < height+3; x++)
 		free(pixel_2[x]);
 	for(x = 0; x < height; x++)
@@ -168,21 +151,18 @@ waitKey(0);
 	free(pixel_2);
 	free(pixel_lbp);
 }
+void TPLBP_show(Mat result)
+{
+    Point2f src_center(result.cols/2.0F, result.rows/2.0F);
+    Mat rot_mat = getRotationMatrix2D(src_center, 90, 1.0);
+    Mat dst;
+    warpAffine(result, dst, rot_mat, result.size());
+    imshow("result",dst);
+    waitKey(0);
 
+}
 void Img2Csv(unsigned char *buffer, int filesize)
 {
-	/*FILE *LBPcsv = fopen("yes.csv", "wb");
-    fprintf(LBPcsv, "LBP_mode1\n");
-    int pixel,counT=0;
-    for(pixel = 54; pixel < (int)filesize; pixel+=3)
-    {   if((counT%512)=0)
-        fprintf(LBPcsv, "%lf\n", (float)buffer[pixel]);
-
-
-    	fprintf(LBPcsv, "%lf", (float)buffer[pixel]);
-        counT++;
-	}
-	fclose(LBPcsv);*/
 	FILE *lena_BMP = fopen("lena.csv", "wb");
     fprintf(lena_BMP, "lena_mode1\n");
     int pixel;
@@ -199,119 +179,78 @@ void Img2Csv(unsigned char *buffer, int filesize)
 int jump(int *x,int *y,int core_x,int core_y)
 
 {
-            int a=*x-core_x;
-            int b=*y-core_y;
-            if((a==-3)&&(b==-3))
-            {
-                *y+=3;
-                return 0;
-            }
-            if((a==-3)&&(b==0))
-            {
-                *y+=3;
-                return 0;
-            }
-            if((a==-3)&&(b==3))
-            {
-                *x+=3;
-                return 0;
-            }
-            if((a==0)&&(b==3))
-            {
-                *x+=3;
-                return 0;
-            }
-            if((a==3)&&(b==3))
-            {
-                *y-=3;
-                return 0;
-            }
-            if((a==3)&&(b==0))
-            {
-                *y-=3;
-                return 0;
-            }
-            if((a==3)&&(b==-3))
-            {
-                *x-=3;
-                return 0;
-            }
-            if((a==0)&&(b==0))
-            {
-                *x-=3;
-                return 0;
-
-
-            }
-
-
+    int a=*x-core_x;
+    int b=*y-core_y;
+    if((a==-3)&&(b==-3))
+    {
+        *y+=3;
+        return 0;
+    }
+    if((a==-3)&&(b==0))
+    {
+        *y+=3;
+        return 0;
+    }
+    if((a==-3)&&(b==3))
+    {
+        *x+=3;
+        return 0;
+    }
+    if((a==0)&&(b==3))
+    {
+        *x+=3;
+        return 0;
+    }
+    if((a==3)&&(b==3))
+    {
+        *y-=3;
+        return 0;
+    }
+    if((a==3)&&(b==0))
+    {
+        *y-=3;
+        return 0;
+    }
+    if((a==3)&&(b==-3))
+    {
+        *x-=3;
+        return 0;
+    }
+    if((a==0)&&(b==0))
+    {
+        *x-=3;
+        return 0;
+    }
 
 }
 
 int sma_LBP(int x,int y,int *s,unsigned char **p2)
 {
-                int num=0;
-                int mask_33[9];
-                for(int x1 = x-1; x1 <= x+1; ++x1)
-                {
-                    for(int y1 = y-1; y1 <= y+1; ++y1)
-                    {
-                        int a1=p2[x1][y1];
-                        int b1=p2[x][y];
-                        if (a1>=b1)
-                        mask_33[num] = 1;
-                        else if(a1 <b1)
-                        mask_33[num] = 0;
-                        num++;
-                        if(num == 8)
-                        {
-                            *s=0;
-                            *s += (mask_33[0] == 1) ? pow(2, 7):0;
-                            *s += (mask_33[1] == 1) ? pow(2, 6):0;
-                            *s += (mask_33[2] == 1) ? pow(2, 5):0;
-                            *s += (mask_33[5] == 1) ? pow(2, 4):0;
-                            *s += (mask_33[8] == 1) ? pow(2, 3):0;
-                            *s += (mask_33[7] == 1) ? pow(2, 2):0;
-                            *s += (mask_33[6] == 1) ? pow(2, 1):0;
-                            *s += (mask_33[3] == 1) ? pow(2, 0):0;
-                        }
-                    }
+    int num=0;
+    int mask_33[9];
+    for(int x1 = x-1; x1 <= x+1; ++x1)
+    {
+        for(int y1 = y-1; y1 <= y+1; ++y1)
+        {
+            int a1=p2[x1][y1];
+            int b1=p2[x][y];
+            if (a1>=b1)
+            mask_33[num] = 1;
+            else if(a1 <b1)
+            mask_33[num] = 0;
+            num++;
+            if(num == 8)
+            {
+                *s=0;
+                *s += (mask_33[0] == 1) ? pow(2, 7):0;
+                *s += (mask_33[1] == 1) ? pow(2, 6):0;
+                *s += (mask_33[2] == 1) ? pow(2, 5):0;
+                *s += (mask_33[5] == 1) ? pow(2, 4):0;
+                *s += (mask_33[8] == 1) ? pow(2, 3):0;
+                *s += (mask_33[7] == 1) ? pow(2, 2):0;
+                *s += (mask_33[6] == 1) ? pow(2, 1):0;
+                *s += (mask_33[3] == 1) ? pow(2, 0):0;
             }
+        }
+    }
 }
-
-
- /** pixel_lbp[x-1][y-1] = temp1;*/
-/**
-#include <iostream>
-#include <opencv\cv.h>
-#include <opencv\highgui.h>
-
-using namespace std;
-using namespace cv;
-int main()
-{
-
-	//Mat frame;
-	VideoCapture cap(0);
-	if (!cap.isOpened()){
-		return -1;
-	}
-	//cap.read(Mat frame);
-	Mat src = Mat(cap.read(Mat frame));
-	imshow("window", src);
-    imwrite("nowon"src);
-
-
-/**while(1)
-{
-
-if (waitKey(1) == 'c') {    	//連續按c跳脫
-			break;
-		}
-}
-
-
-
-		waitKey(30);
-	}
-*/
